@@ -8,8 +8,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/maxwolffe/butler-cli/v2/service"
 	"github.com/spf13/cobra"
-	"maxwolffe.com/recipeUploader/v2/service"
 )
 
 // processImagesCmd represents the processImages command

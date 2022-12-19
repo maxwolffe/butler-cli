@@ -13,8 +13,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/maxwolffe/butler-cli/v2/data"
 	"gopkg.in/yaml.v2"
-	"maxwolffe.com/recipeUploader/v2/data"
 )
 
 type ButlerService struct {
@@ -26,6 +26,7 @@ func NewButlerService() *ButlerService {
 	butService := ButlerService{}
 
 	// TODO make configuration source configurable
+	// TODO make this default not depend on WHERE the binary is run - make it always relative to the module source
 	absPath, _ := filepath.Abs("secrets.yaml")
 	fmt.Println("Absolute Path: " + absPath)
 	fileContent, _ := os.ReadFile(absPath)
