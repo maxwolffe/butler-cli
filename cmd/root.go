@@ -29,5 +29,5 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().StringVarP(&csvOutputFilePath, "outputPath", "o", "", "Specifies the path to write the output CSV to. If empty, no CSV is output. (.e.g -o '/Users/maxwolffe/Desktop/output.csv') ")
+	rootCmd.PersistentFlags().StringVarP(&csvOutputFilePath, "outputPath", "o", "", "Specifies the path to write the output CSV to. If empty, no CSV is output. (.e.g -o '/Users/maxwolffe/Desktop/output.csv') ")
 }

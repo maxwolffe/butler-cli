@@ -28,6 +28,5 @@ var getExtractionResultsCmd = &cobra.Command{
 }
 
 func init() {
-	getExtractionResultsCmd.Flags().StringVarP(&csvOutputFilePath, "outputPath", "o", "", "Specifies the path to write the output CSV to. If empty, no CSV is output.")
 	rootCmd.AddCommand(getExtractionResultsCmd)
 }
