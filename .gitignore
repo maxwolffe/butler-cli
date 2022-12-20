@@ -24,4 +24,4 @@ go.work
 secrets.yaml
 
 # Project build output 
-recipeUploader
+butler-cli

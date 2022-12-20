@@ -14,7 +14,7 @@ var getExtractionResultsCmd = &cobra.Command{
 	Short: "Given an uploadID return Butler results.",
 	Long: `Given an uploadID (available from the website or upload response), return butler results.
 	
-
+	$ ./butler-cli getExtractionResults 5cc7d32e-b5cc-48b2-a125-90b3acfe0e1c
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		butService := service.NewButlerService()
@@ -26,14 +26,4 @@ var getExtractionResultsCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(getExtractionResultsCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// getExtractionResultsCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// getExtractionResultsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
