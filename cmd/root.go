@@ -13,7 +13,6 @@ var csvOutputFilePath string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "v2",
 	Short: "A cli for interacting with butlerlabs.ai",
 	Long:  `A cli for interacting with butlerlabs.ai.`,
 	// Uncomment the following line if your bare application
@@ -30,5 +29,5 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().StringVarP(&csvOutputFilePath, "outputPath", "o", "", "Specifies the path to write the output CSV to. If empty, no CSV is output.")
+	rootCmd.Flags().StringVarP(&csvOutputFilePath, "outputPath", "o", "", "Specifies the path to write the output CSV to. If empty, no CSV is output. (.e.g -o '/Users/maxwolffe/Desktop/output.csv') ")
 }
