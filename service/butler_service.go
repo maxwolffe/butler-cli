@@ -37,14 +37,16 @@ func NewButlerService() *ButlerService {
 	butService.ButlerConfig = *butlerConfig
 	butService.APIBase = "https://app.butlerlabs.ai/api/queues/" + butlerConfig.QueueID
 
-	fmt.Println("Created ButlerService with APIKey: " + string(butService.ButlerConfig.ApiKey))
-	fmt.Println("Created ButlerService with QueueID: " + string(butService.ButlerConfig.ApiKey))
-	fmt.Println("Created ButlerService with BaseAPI: " + string(butService.APIBase))
+	// TODO output these as debug logs if extra verbosity requested
+	// TODO move to a proper logging framework.
+	// fmt.Println("Created ButlerService with APIKey: " + string(butService.ButlerConfig.ApiKey))
+	// fmt.Println("Created ButlerService with QueueID: " + string(butService.ButlerConfig.ApiKey))
+	// fmt.Println("Created ButlerService with BaseAPI: " + string(butService.APIBase))
 
 	return &butService
 }
 
-func (butService *ButlerService) ProcessSingleImage(filePath string) error {
+func (butService *ButlerService) ProcessSingleImage(filePath string) ([]data.Document, error) {
 	imgFile, err := os.Open(filePath)
 	if err != nil {
 		panic(err)
@@ -88,19 +90,17 @@ func (butService *ButlerService) ProcessSingleImage(filePath string) error {
 
 	res, err := client.Do(request)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer res.Body.Close()
 
 	cnt, err := io.ReadAll(res.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	uploadResponse := data.UploadResponse{}
 	json.Unmarshal(cnt, &uploadResponse)
-	fmt.Println("Printing upload response")
-	fmt.Print(uploadResponse)
 
 	for {
 		result, err := butService.GetExtractionResults(uploadResponse.UploadID)
@@ -110,35 +110,37 @@ func (butService *ButlerService) ProcessSingleImage(filePath string) error {
 
 		if result.Ready {
 			fmt.Println(result.Response)
-			return nil
+			return result.Response.Items, nil
 		}
 		time.Sleep(60 * time.Second)
 	}
 }
 
-func (butService *ButlerService) ProcessRecipesInDir(dir string) error {
+func (butService *ButlerService) ProcessRecipesInDir(dir string) ([]data.Document, error) {
 	// TODO - process HEIC files instead of having to export to JPEG.
-	// Open the image file
+	// TODO - would be cool to confirm all the files which were going to be uploaded first.
 
+	// Open the image file
 	files, err := os.ReadDir(dir)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	completeDocuments := make([]data.Document, 0)
 
 	for _, file := range files {
 		fmt.Println(file.Name(), file.IsDir())
 		if !file.IsDir() {
 			// TODO Add response to a list
 			// TODO return a structured object from this filename
-			butService.ProcessSingleImage(dir + "/" + file.Name())
+			documents, _ := butService.ProcessSingleImage(dir + "/" + file.Name())
+			completeDocuments = append(completeDocuments, documents...)
 		}
 	}
 
-	// TODO collate responses into csv
-
 	// TODO - short term - write the processed files to a csv
-	// TODO - longterm write the processed files to Paprika directly
-	return nil
+
+	return completeDocuments, nil
 }
 
 func (butService *ButlerService) GetExtractionResults(uploadId string) (*data.ExtractionResult, error) {

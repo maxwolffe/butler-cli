@@ -20,10 +20,14 @@ var getExtractionResultsCmd = &cobra.Command{
 		butService := service.NewButlerService()
 
 		uploadId := args[0]
-		butService.GetExtractionResults(uploadId)
+		documents, _ := butService.GetExtractionResults(uploadId)
+		if csvOutputFilePath != "" {
+			service.GenerateCsv(documents.Response.Items, csvOutputFilePath)
+		}
 	},
 }
 
 func init() {
+	getExtractionResultsCmd.Flags().StringVarP(&csvOutputFilePath, "outputPath", "o", "", "Specifies the path to write the output CSV to. If empty, no CSV is output.")
 	rootCmd.AddCommand(getExtractionResultsCmd)
 }
