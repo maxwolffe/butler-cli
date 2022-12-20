@@ -7,9 +7,12 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 )
 
 var csvOutputFilePath string
+var sugaredLogger *zap.SugaredLogger
+var verbose bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -26,8 +29,21 @@ func Execute() {
 	if err != nil {
 		os.Exit(1)
 	}
+
+	options := make([]zap.Option, 0)
+
+	if !verbose {
+		options = append(options, zap.IncreaseLevel(zap.InfoLevel))
+	}
+
+	// Set up logger
+	logger, _ := zap.NewDevelopment(options...)
+	defer logger.Sync() // flushes buffer, if any
+	sugaredLogger = logger.Sugar()
+
 }
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&csvOutputFilePath, "outputPath", "o", "", "Specifies the path to write the output CSV to. If empty, no CSV is output. (.e.g -o '/Users/maxwolffe/Desktop/output.csv') ")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "If specified, output logs at debug level.")
 }

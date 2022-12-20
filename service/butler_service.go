@@ -14,21 +14,24 @@ import (
 	"time"
 
 	"github.com/maxwolffe/butler-cli/v2/data"
+	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 )
 
 type ButlerService struct {
 	ButlerConfig data.ButlerConfig
 	APIBase      string
+	Logger       *zap.SugaredLogger
 }
 
-func NewButlerService() *ButlerService {
+func NewButlerService(logger *zap.SugaredLogger) *ButlerService {
 	butService := ButlerService{}
+	butService.Logger = logger
 
 	// TODO make configuration source configurable
 	// TODO make this default not depend on WHERE the binary is run - make it always relative to the module source
 	absPath, _ := filepath.Abs("secrets.yaml")
-	fmt.Println("Absolute Path: " + absPath)
+	logger.Debugf("Loading configuration from: %s", absPath)
 	fileContent, _ := os.ReadFile(absPath)
 
 	butlerConfig := &data.ButlerConfig{}
@@ -37,11 +40,9 @@ func NewButlerService() *ButlerService {
 	butService.ButlerConfig = *butlerConfig
 	butService.APIBase = "https://app.butlerlabs.ai/api/queues/" + butlerConfig.QueueID
 
-	// TODO output these as debug logs if extra verbosity requested
-	// TODO move to a proper logging framework.
-	// fmt.Println("Created ButlerService with APIKey: " + string(butService.ButlerConfig.ApiKey))
-	// fmt.Println("Created ButlerService with QueueID: " + string(butService.ButlerConfig.ApiKey))
-	// fmt.Println("Created ButlerService with BaseAPI: " + string(butService.APIBase))
+	logger.Debugf("Created ButlerService with APIKey: %s", butService.ButlerConfig.ApiKey)
+	logger.Debugf("Created ButlerService with QueueID: %s", butService.ButlerConfig.ApiKey)
+	logger.Debugf("Created ButlerService with BaseAPI: %s", butService.APIBase)
 
 	return &butService
 }
@@ -109,7 +110,7 @@ func (butService *ButlerService) ProcessSingleImage(filePath string) ([]data.Doc
 		}
 
 		if result.Ready {
-			fmt.Println(result.Response)
+			butService.Logger.Debugln(result.Response)
 			return result.Response.Items, nil
 		}
 		time.Sleep(60 * time.Second)
@@ -129,7 +130,7 @@ func (butService *ButlerService) ProcessRecipesInDir(dir string) ([]data.Documen
 	completeDocuments := make([]data.Document, 0)
 
 	for _, file := range files {
-		fmt.Println(file.Name(), file.IsDir())
+		butService.Logger.Debugf("Processing file %s, which is a directory: %b", file.Name(), file.IsDir())
 		if !file.IsDir() {
 			// TODO Add response to a list
 			// TODO return a structured object from this filename
@@ -144,13 +145,13 @@ func (butService *ButlerService) ProcessRecipesInDir(dir string) ([]data.Documen
 }
 
 func (butService *ButlerService) GetExtractionResults(uploadId string) (*data.ExtractionResult, error) {
-	fmt.Println("Attempting to extract response: " + uploadId)
+	butService.Logger.Debugf("Attempting to extract response from uploadId: %s", uploadId)
 
 	client := &http.Client{}
 
 	request, err := http.NewRequest("GET", butService.APIBase+"/extraction_results", nil)
 	if err != nil {
-		log.Fatal(err)
+		butService.Logger.Fatal(err)
 	}
 
 	request.Header.Add("Authorization", "Bearer "+butService.ButlerConfig.ApiKey)
@@ -171,8 +172,7 @@ func (butService *ButlerService) GetExtractionResults(uploadId string) (*data.Ex
 	}
 	extractionResponse := data.ExtractionResponse{}
 	json.Unmarshal(cnt, &extractionResponse)
-	fmt.Println("Extraction response:")
-	fmt.Print(extractionResponse)
+	butService.Logger.Debugf("Extraction response: %v", extractionResponse)
 
 	fullyDone := true
 	for _, doc := range extractionResponse.Items {
